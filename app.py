@@ -8,7 +8,7 @@ app = Flask(__name__, template_folder="templates")
 app.secret_key = "your_secret_key"  # Required for session storage
 
 # Database path & connection string
-DB_PATH = r"C:\xampp1\htdocs\VroomXpert\database\Database.accdb"
+DB_PATH = r"database\Database.accdb"
 CONN_STR = rf"DRIVER={{Microsoft Access Driver (*.mdb, *.accdb)}};DBQ={DB_PATH}"
 
 def get_db_connection():
