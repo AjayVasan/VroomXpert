@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Payment - VroomXpert</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h2>Payment</h2>
+    <form id="paymentForm">
+        <input type="hidden" id="customerID" name="customerID">
+        <input type="hidden" id="vehicleNum" name="vehicleNum">
+        
+        <div class="form-group">
+            <label for="name">Customer Name:</label>
+            <input type="text" id="name" name="name" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label for="model">Vehicle Model:</label>
+            <input type="text" id="model" name="model" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label for="phone">Phone Number:</label>
+            <input type="text" id="phone" name="phone" readonly>
+        </div>
+        
+        <div class="form-group">
+            <label for="serviceCharge">Service Charge:</label>
+            <input type="number" id="serviceCharge" name="serviceCharge" placeholder="Service Charge" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="autoWash">Auto Wash:</label>
+            <input type="number" id="autoWash" name="autoWash" placeholder="Auto Wash" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="spareCharges">Spare Parts Charge:</label>
+            <input type="number" id="spareCharges" name="spareCharges" placeholder="Spare Parts Charge" required>
+        </div>
+        
+        <button type="submit">Proceed to Payment</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // Populate form with data from sessionStorage
+    const customerID = sessionStorage.getItem("CustomerID");
+    const vehicleNum = sessionStorage.getItem("vehicleNum");
+    const name = sessionStorage.getItem("customerName");
+    const model = sessionStorage.getItem("model");
+    const phone = sessionStorage.getItem("phone");
+    
+    // Set values in the form
+    document.getElementById("customerID").value = customerID;
+    document.getElementById("vehicleNum").value = vehicleNum;
+    document.getElementById("name").value = name;
+    document.getElementById("model").value = model;
+    document.getElementById("phone").value = phone;
+    
+    console.log("📝 Loaded payment data from session:", { 
+        customerID, vehicleNum, name, model, phone 
+    });
+    
+    // Handle form submission
+    document.getElementById("paymentForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+        
+        console.log("📤 Sending payment data to server");
+        fetch("/save_payment", { 
+            method: "POST", 
+            body: formData 
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("📢 Payment Response:", data);
+            if (data.status === "success") {
+                // Save total and invoice ID for feedback page
+                sessionStorage.setItem("total", data.total);
+                sessionStorage.setItem("invoiceID", data.invoiceID);
+                
+                // Redirect to payment summary
+                window.location.href = "/payment_summary";
+            } else {
+                alert("Error: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("❌ Fetch Error:", error);
+            alert("An error occurred while processing your payment. Please try again.");
+        });
+    });
+});
+</script>
+</body>
+</html>

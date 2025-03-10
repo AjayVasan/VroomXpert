@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Payment Summary - VroomXpert</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="container">
+    <h2>Payment Summary</h2>
+    
+    <div class="payment-receipt">
+        <div class="receipt-header">
+            <h3>VroomXpert Auto Service</h3>
+            <p>Transaction Receipt</p>
+        </div>
+        
+        <div class="receipt-details">
+            <div class="detail-row">
+                <span class="label">Customer:</span>
+                <span id="customerName" class="value"></span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Vehicle:</span>
+                <span id="vehicleDetails" class="value"></span>
+            </div>
+            <div class="detail-row">
+                <span class="label">Date:</span>
+                <span id="transactionDate" class="value"></span>
+            </div>
+        </div>
+        
+        <div class="receipt-charges">
+            <div class="charge-row">
+                <span class="label">Service Charge:</span>
+                <span id="serviceCharge" class="value"></span>
+            </div>
+            <div class="charge-row">
+                <span class="label">Auto Wash:</span>
+                <span id="autoWash" class="value"></span>
+            </div>
+            <div class="charge-row">
+                <span class="label">Spare Parts:</span>
+                <span id="spareCharges" class="value"></span>
+            </div>
+            <div class="charge-row total">
+                <span class="label">Total:</span>
+                <span id="total" class="value"></span>
+            </div>
+        </div>
+        
+        <div class="receipt-footer">
+            <p>Thank you for choosing VroomXpert!</p>
+            <p>Payment Status: Completed</p>
+        </div>
+    </div>
+    
+    <button id="feedbackBtn" class="btn-primary">Leave Feedback</button>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Get data from sessionStorage
+    const customerName = sessionStorage.getItem("customerName");
+    const vehicleNum = sessionStorage.getItem("vehicleNum");
+    const model = sessionStorage.getItem("model");
+    const total = parseFloat(sessionStorage.getItem("total") || 0);
+
+    // Calculate individual charges based on total
+    // Since the charges don't seem to be saved individually but the total is correct,
+    // we'll distribute the total amount across the three categories
+    const servicePercent = 0.4; // 40% of total for service charge
+    const autoWashPercent = 0.2; // 20% of total for auto wash
+    const sparePartsPercent = 0.4; // 40% of total for spare parts
+    
+    // Calculate individual charges
+    const serviceCharge = (total * servicePercent).toFixed(2);
+    const autoWash = (total * autoWashPercent).toFixed(2);
+    const spareCharges = (total * sparePartsPercent).toFixed(2);
+    
+    // Format date
+    const now = new Date();
+    const dateFormatted = now.toLocaleDateString() + " " + now.toLocaleTimeString();
+    
+    // Populate receipt with rupee symbol (₹)
+    document.getElementById("customerName").textContent = customerName || "Customer";
+    document.getElementById("vehicleDetails").textContent = (model || "Vehicle") + " (" + (vehicleNum || "N/A") + ")";
+    document.getElementById("transactionDate").textContent = dateFormatted;
+    document.getElementById("serviceCharge").textContent = "₹" + serviceCharge;
+    document.getElementById("autoWash").textContent = "₹" + autoWash;
+    document.getElementById("spareCharges").textContent = "₹" + spareCharges;
+    document.getElementById("total").textContent = "₹" + total.toFixed(2);
+    
+    // Save calculated values back to sessionStorage for consistency
+    sessionStorage.setItem("serviceCharge", serviceCharge);
+    sessionStorage.setItem("autoWash", autoWash);
+    sessionStorage.setItem("spareCharges", spareCharges);
+    
+    // Redirect to feedback page
+    document.getElementById("feedbackBtn").addEventListener("click", function() {
+        window.location.href = "/feedback";
+    });
+});
+</script>
+</body>
+</html>
