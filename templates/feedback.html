@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Feedback - VroomXpert</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .error-message { color: red; font-size: 14px; display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Feedback</h2>
+    <form id="feedbackForm">
+        <input type="hidden" id="customerID" name="customer_id">
+        <input type="hidden" id="invoiceID" name="invoice_id">
+        
+        <div class="form-group">
+            <label for="customerNameDisplay">Customer Name:</label>
+            <input type="text" id="customerNameDisplay" readonly placeholder="Loading...">
+            <p id="customerError" class="error-message">Error fetching customer name</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="feedbackText">Your Feedback:</label>
+            <textarea id="feedbackText" name="comments" placeholder="Please share your experience with our service" required></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="rating">Rate Your Experience (1-5):</label>
+            <input type="number" id="rating" name="rating" min="1" max="5" required>
+        </div>
+        
+        <button type="submit" id="submitBtn">Submit Feedback</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const customerID = sessionStorage.getItem("CustomerID");
+    const invoiceID = sessionStorage.getItem("invoiceID");
+
+    // Set hidden fields
+    if (customerID) document.getElementById("customerID").value = customerID;
+    if (invoiceID) document.getElementById("invoiceID").value = invoiceID;
+
+    // Fetch customer name if customerID exists
+    if (customerID) {
+        fetch(`/get_customer_name?customer_id=${customerID}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                document.getElementById("customerNameDisplay").value = data.name;
+            } else {
+                document.getElementById("customerNameDisplay").value = "Unknown Customer";
+                document.getElementById("customerError").style.display = "block";
+            }
+        })
+        .catch(error => {
+            console.error("Error fetching customer name:", error);
+            document.getElementById("customerNameDisplay").value = "Error fetching name";
+            document.getElementById("customerError").style.display = "block";
+        });
+    } else {
+        document.getElementById("customerNameDisplay").value = "No Customer ID Found";
+    }
+
+    // Handle form submission
+    document.getElementById("feedbackForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        const feedbackText = document.getElementById("feedbackText").value.trim();
+        if (feedbackText === "") {
+            alert("Please enter your feedback before submitting.");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Feedback";
+            return;
+        }
+
+        const formData = new FormData(this);
+        
+        fetch("/submit_feedback", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                alert("Thank you for your feedback!");
+                window.location.href = "/";
+            } else {
+                alert("Error: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred while submitting your feedback. Please try again.");
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Submit Feedback";
+        });
+    });
+});
+</script>
+</body>
+</html>
