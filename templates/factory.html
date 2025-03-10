@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Factory Repair - VroomXpert</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let customerID = sessionStorage.getItem("CustomerID");
+            let vehicleNum = sessionStorage.getItem("vehicleNum");
+            let model = sessionStorage.getItem("model");
+            let customerName = sessionStorage.getItem("name");
+
+            if (!customerID || !vehicleNum || !model || !customerName) {
+                alert("Error: Missing session data. Please go back and complete previous steps.");
+                window.location.href = "vehicle.html";
+                return;
+            }
+
+            document.getElementById("vehicleNum").value = vehicleNum;
+            document.getElementById("model").value = model;
+            document.getElementById("customerName").value = customerName;
+
+            document.getElementById("factoryForm").addEventListener("submit", function (event) {
+                event.preventDefault(); 
+
+                let formData = new FormData(this);
+
+                fetch("/submit_factory", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("📢 Server Response:", data);
+                    if (data.status === "success") {
+                        sessionStorage.setItem("insuranceNum", data.insuranceNum);
+                        sessionStorage.setItem("repair", data.repair);
+                        window.location.href = "payment.html";  
+                    } else {
+                        alert("❌ Error: " + data.message);
+                    }
+                })
+                .catch(error => console.error("❌ Fetch error:", error));
+            });
+        });
+    </script>
+</head>
+<body>
+    <script src="js/script.js"></script>
+    <div class="container">
+        <h2>Factory Repair</h2>
+        <form id="factoryForm">
+            <input type="text" name="vehicleNum" id="vehicleNum" readonly>
+            <input type="text" name="model" id="model" readonly>
+            <input type="text" name="customerName" id="customerName" readonly>
+            <input type="text" name="insuranceNum" placeholder="Insurance Number" required>
+            <input type="text" name="repair" placeholder="Demanded Repair" required>
+            <button type="submit">Next</button>
+        </form>
+    </div>
+</body>
+</html>

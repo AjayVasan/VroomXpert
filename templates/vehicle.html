@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Vehicle Details - VroomXpert</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+       document.addEventListener("DOMContentLoaded", function () {
+            let customerID = sessionStorage.getItem("CustomerID");
+            let vehicleNum = sessionStorage.getItem("vehicleNum");
+
+            if (!customerID || !vehicleNum) {
+                alert("Error: Missing customer details.");
+                window.location.href = "index.html";
+                return;
+            }
+
+            console.log("📢 Fetching customer name for ID:", customerID);
+
+            fetch(`/get_customer_name?CustomerID=${customerID}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("📢 Server Response:", data);
+                    if (data.status === "success") {
+                        document.getElementById("welcomeMessage").innerText = 
+                            `Hello ${data.name}, we would like to have more details about your vehicle (${vehicleNum}).`;
+                    } else {
+                        document.getElementById("welcomeMessage").innerText = 
+                            "Error fetching customer name.";
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Fetch Error:", error);
+                    document.getElementById("welcomeMessage").innerText = "Error fetching customer name.";
+                });
+
+            // ✅ Handle Form Submission
+            document.getElementById("vehicleForm").addEventListener("submit", function (event) {
+                event.preventDefault();  // Prevent default form submission
+
+                let formData = new FormData(this);
+                formData.append("CustomerID", customerID);
+                formData.append("vehicleNum", vehicleNum);
+
+                fetch("/submit_vehicle", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("📢 Vehicle Submission Response:", data);
+                    if (data.status === "success") {
+                        sessionStorage.setItem("model", data.model); // Store model for next step
+                        window.location.href = "factory.html";  // ✅ Redirect to Factory Page
+                    } else {
+                        alert("❌ Error: " + data.message);
+                    }
+                })
+                .catch(error => console.error("❌ Fetch error:", error));
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h2 id="welcomeMessage">Loading...</h2>
+        <form id="vehicleForm">
+            <input type="hidden" id="customerID" name="CustomerID">
+            <input type="hidden" id="vehicleNum" name="vehicleNum">
+            <input type="text" name="type" placeholder="Type" required>
+            <input type="text" name="brand" placeholder="Brand" required>
+            <input type="text" name="model" placeholder="Model" required>
+            <input type="number" name="year" placeholder="Year" required>
+            <button type="submit">Next</button>
+        </form>
+    </div>
+</body>
+</html>

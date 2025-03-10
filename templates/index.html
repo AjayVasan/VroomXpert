@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title>Customer Entry - VroomXpert</title>
+    <link rel="stylesheet" href="css/style.css">
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("customerForm").addEventListener("submit", function (event) {
+            event.preventDefault(); // ✅ Prevent default form submission
+
+            let formData = new FormData(this);
+            fetch("http://127.0.0.1:5000/save_customer", { 
+                method: "POST",  // ✅ Ensure method is POST
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    sessionStorage.setItem("CustomerID", data.customerID);
+                    sessionStorage.setItem("customerName", data.name);
+                    sessionStorage.setItem("vehicleNum", data.vehicleNum);
+                    sessionStorage.setItem("phone", data.phone);
+                    window.location.href = "vehicle"; // ✅ Redirect to vehicle page
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        });
+    });
+
+    </script>
+    
+    
+    
+<script src="js/script.js"></script></head>
+
+<body>
+<div class="container">
+    <h2>Customer Details</h2>
+    <form id="customerForm" action="save_customer.php" method="POST">
+        <input type="text" name="name" placeholder="Customer Name" required="">
+        <input type="text" name="vehicleNum" placeholder="Vehicle Number" required="">
+        <input type="text" name="phone" placeholder="Mobile Number" required="">
+        <button type="submit">Next</button>
+    </form>
+</div>
+
+
+</body></html>
