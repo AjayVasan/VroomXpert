@@ -3,28 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <title>Factory Repair - VroomXpert</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script>
+        // Debug function to check sessionStorage
+        function checkSessionStorage() {
+            console.log("📊 Session Storage Contents:");
+            for (let i = 0; i < sessionStorage.length; i++) {
+                let key = sessionStorage.key(i);
+                console.log(`${key}: ${sessionStorage.getItem(key)}`);
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
+            // Check sessionStorage for debugging
+            checkSessionStorage();
+
+            // For testing only - add test data if missing
+            if (!sessionStorage.getItem("CustomerID")) {
+                console.log("⚠️ Setting test values in sessionStorage");
+                sessionStorage.setItem("CustomerID", "TEST123");
+                sessionStorage.setItem("vehicleNum", "CAR456");
+                sessionStorage.setItem("model", "TestModel");
+                sessionStorage.setItem("brand", "TestBrand");
+                sessionStorage.setItem("type", "TestType");
+                sessionStorage.setItem("year", "2023");
+                // Check again after setting test values
+                checkSessionStorage();
+            }
+
+            // Get values from sessionStorage
             let customerID = sessionStorage.getItem("CustomerID");
             let vehicleNum = sessionStorage.getItem("vehicleNum");
             let model = sessionStorage.getItem("model");
-            let customerName = sessionStorage.getItem("name");
+            let brand = sessionStorage.getItem("brand");
+            let type = sessionStorage.getItem("type");
+            let year = sessionStorage.getItem("year");
 
-            if (!customerID || !vehicleNum || !model || !customerName) {
-                alert("Error: Missing session data. Please go back and complete previous steps.");
-                window.location.href = "vehicle.html";
-                return;
-            }
+            console.log("🚀 Debug: Loaded CustomerID =", customerID);
+            console.log("🚀 Debug: Loaded VehicleNum =", vehicleNum);
+            console.log("🚀 Debug: Loaded Model =", model);
+            console.log("🚀 Debug: Loaded Brand =", brand);
+            console.log("🚀 Debug: Loaded Type =", type);
+            console.log("🚀 Debug: Loaded Year =", year);
 
+            // Set hidden input field for CustomerID
+            document.getElementById("customerID").value = customerID;
+            
+            // Set visible read-only fields
             document.getElementById("vehicleNum").value = vehicleNum;
             document.getElementById("model").value = model;
-            document.getElementById("customerName").value = customerName;
+            
+            // Fetch customer name
+            fetch(`/get_customer_name?CustomerID=${customerID}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("📢 Customer Name Response:", data);
+                    if (data.status === "success") {
+                        // Store customer name in session storage
+                        sessionStorage.setItem("customerName", data.name);
+                        // Update the field
+                        document.getElementById("customerName").value = data.name;
+                    } else {
+                        console.error("❌ Error fetching customer name:", data.message);
+                        // For testing, set a default name
+                        document.getElementById("customerName").value = "Test Customer";
+                    }
+                })
+                .catch(error => {
+                    console.error("❌ Fetch Error:", error);
+                    // For testing, set a default name
+                    document.getElementById("customerName").value = "Test Customer";
+                });
 
+            // Handle form submission
             document.getElementById("factoryForm").addEventListener("submit", function (event) {
                 event.preventDefault(); 
 
+                // Double check CustomerID is set
+                if (!document.getElementById("customerID").value) {
+                    console.log("⚠️ Warning: CustomerID missing. Setting it again.");
+                    document.getElementById("customerID").value = customerID;
+                }
+
                 let formData = new FormData(this);
+
+                console.log("📤 Sending Factory Form Data:");
+                for (let pair of formData.entries()) {
+                    console.log(`${pair[0]}: ${pair[1]}`);
+                }
 
                 fetch("/submit_factory", {
                     method: "POST",
@@ -32,30 +98,59 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log("📢 Server Response:", data);
+                    console.log("📢 Factory Submission Response:", data);
                     if (data.status === "success") {
+                        // Store required data for the next page
                         sessionStorage.setItem("insuranceNum", data.insuranceNum);
                         sessionStorage.setItem("repair", data.repair);
-                        window.location.href = "payment.html";  
+                        // Redirect to payment page
+                        window.location.href = "/payment";  
                     } else {
                         alert("❌ Error: " + data.message);
                     }
                 })
-                .catch(error => console.error("❌ Fetch error:", error));
+                .catch(error => {
+                    console.error("❌ Fetch error:", error);
+                    alert("An error occurred while submitting the data. Please try again.");
+                });
             });
         });
     </script>
 </head>
 <body>
-    <script src="js/script.js"></script>
     <div class="container">
         <h2>Factory Repair</h2>
         <form id="factoryForm">
-            <input type="text" name="vehicleNum" id="vehicleNum" readonly>
-            <input type="text" name="model" id="model" readonly>
-            <input type="text" name="customerName" id="customerName" readonly>
-            <input type="text" name="insuranceNum" placeholder="Insurance Number" required>
-            <input type="text" name="repair" placeholder="Demanded Repair" required>
+            <!-- Hidden field for CustomerID -->
+            <input type="hidden" id="customerID" name="customerID">
+            
+            <!-- Read-only fields -->
+            <div class="form-group">
+                <label for="vehicleNum">Vehicle Number:</label>
+                <input type="text" name="vehicleNum" id="vehicleNum" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="model">Model:</label>
+                <input type="text" name="model" id="model" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="customerName">Customer Name:</label>
+                <input type="text" name="customerName" id="customerName" readonly>
+            </div>
+            
+            <!-- User-input fields -->
+            <div class="form-group">
+                <label for="insuranceNum">Insurance Number:</label>
+                <input type="text" name="insuranceNum" id="insuranceNum" placeholder="Enter Insurance Number" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="repair">Demanded Repair:</label>
+                <input type="text" name="repair" id="repair" placeholder="Describe Required Repair" required>
+            </div>
+            
             <button type="submit">Next</button>
         </form>
     </div>

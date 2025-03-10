@@ -4,9 +4,13 @@
     <title>Vehicle Details - VroomXpert</title>
     <link rel="stylesheet" href="css/style.css">
     <script>
-       document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function () {
+            // Get values from sessionStorage
             let customerID = sessionStorage.getItem("CustomerID");
             let vehicleNum = sessionStorage.getItem("vehicleNum");
+
+            console.log("🚀 Debug: Loaded CustomerID =", customerID);
+            console.log("🚀 Debug: Loaded VehicleNum =", vehicleNum);
 
             if (!customerID || !vehicleNum) {
                 alert("Error: Missing customer details.");
@@ -14,15 +18,19 @@
                 return;
             }
 
-            console.log("📢 Fetching customer name for ID:", customerID);
+            // Set values in the hidden input fields
+            document.getElementById("customerID").value = customerID;
+            document.getElementById("vehicleNum").value = vehicleNum;
 
+            // Fetch customer name
+            console.log("📢 Fetching customer name for ID:", customerID);
             fetch(`/get_customer_name?CustomerID=${customerID}`)
                 .then(response => response.json())
                 .then(data => {
                     console.log("📢 Server Response:", data);
                     if (data.status === "success") {
                         document.getElementById("welcomeMessage").innerText = 
-                            `Hello ${data.name}, we would like to have more details about your vehicle (${vehicleNum}).`;
+                            `Hello ${data.name}, please enter your vehicle details for (${vehicleNum}).`;
                     } else {
                         document.getElementById("welcomeMessage").innerText = 
                             "Error fetching customer name.";
@@ -33,13 +41,17 @@
                     document.getElementById("welcomeMessage").innerText = "Error fetching customer name.";
                 });
 
-            // ✅ Handle Form Submission
+            // Handle form submission
             document.getElementById("vehicleForm").addEventListener("submit", function (event) {
                 event.preventDefault();  // Prevent default form submission
 
+                // Create FormData from the form (will automatically include hidden fields)
                 let formData = new FormData(this);
-                formData.append("CustomerID", customerID);
-                formData.append("vehicleNum", vehicleNum);
+
+                console.log("📤 Sending Form Data:");
+                for (let pair of formData.entries()) {
+                    console.log(`${pair[0]}: ${pair[1]}`);
+                }
 
                 fetch("/save_vehicle", {
                     method: "POST",
@@ -49,8 +61,14 @@
                 .then(data => {
                     console.log("📢 Vehicle Submission Response:", data);
                     if (data.status === "success") {
-                        sessionStorage.setItem("model", data.model); // Store model for next step
-                        window.location.href = "factory.html";  // ✅ Redirect to Factory Page
+                        // Store details in sessionStorage for next page
+                        sessionStorage.setItem("model", data.model);
+                        sessionStorage.setItem("brand", data.brand);
+                        sessionStorage.setItem("type", data.type);
+                        sessionStorage.setItem("year", data.year);
+
+                        // Redirect to Factory Page
+                        window.location.href = "factory";  
                     } else {
                         alert("❌ Error: " + data.message);
                     }
@@ -64,8 +82,9 @@
     <div class="container">
         <h2 id="welcomeMessage">Loading...</h2>
         <form id="vehicleForm">
-            <input type="hidden" id="customerID" name="CustomerID">
-            <input type="hidden" id="vehicleNum" name="vehicleNum">
+            <input type="hidden" id="customerID" name="CustomerID" value="">
+            <input type="hidden" id="vehicleNum" name="vehicleNum" value="">
+            
             <input type="text" name="type" placeholder="Type" required>
             <input type="text" name="brand" placeholder="Brand" required>
             <input type="text" name="model" placeholder="Model" required>
