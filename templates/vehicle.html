@@ -41,7 +41,7 @@
                 formData.append("CustomerID", customerID);
                 formData.append("vehicleNum", vehicleNum);
 
-                fetch("/submit_vehicle", {
+                fetch("/save_vehicle", {
                     method: "POST",
                     body: formData
                 })
