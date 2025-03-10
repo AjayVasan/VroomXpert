@@ -73,5 +73,3 @@ VroomXpert is a web-based vehicle management system built using Flask. It allows
 - **Enhanced Database:** Transition to a more scalable database like PostgreSQL or MySQL.
 - **UI Improvements:** A responsive and visually appealing frontend.
 - **Automated Service Suggestions:** AI-driven recommendations for maintenance and repairs.
-- **Mobile App Integration:** Expanding functionality to mobile platforms.
-
